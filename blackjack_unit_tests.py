@@ -54,10 +54,10 @@ class testHandClass(unittest.TestCase):
         self.dealer_hand = blackjack.DealerHand(blackjack.Deck())
         self.example_hard_cards = [blackjack.Card(
             13, 'Diamonds'), blackjack.Card(4, 'Clubs')]
-        self.example_soft_cards = [blackjack.Card(1, 'Ace'),
-                                   blackjack.Card(6, 'Six')]
-        self.example_blackjack_cards = [blackjack.Card(1, 'Ace'),
-                                        blackjack.Card(10, 'King')]
+        self.example_soft_cards = [blackjack.Card(1, 'Hearts'),
+                                   blackjack.Card(6, 'Diamonds')]
+        self.example_blackjack_cards = [blackjack.Card(1, 'Spades'),
+                                        blackjack.Card(13, 'Hearts')]
 
     def test_display_cards(self):
         displayed = self.hand.display_cards(self.example_hard_cards)
@@ -83,14 +83,62 @@ class testHandClass(unittest.TestCase):
     def test_hand_is_blackjack(self):
         self.assertTrue(self.hand.is_blackjack(self.example_blackjack_cards))
         self.assertFalse(self.hand.is_blackjack(self.example_hard_cards))
+        self.assertEqual(self.hand.total_points(self.example_blackjack_cards), 21)
+        self.assertEqual(self.dealer_hand.total_points(self.example_blackjack_cards), 21)
 
     def test_dealer_should_hit(self):
         # Lowest possible score on a hand is two points.
-        for total in range(2, 21):
+        for total in range(2, 22):
             if total < 17:
                 self.assertTrue(self.dealer_hand.dealer_should_hit(total))
             else:
                 self.assertFalse(self.dealer_hand.dealer_should_hit(total))
+
+    def test_dealer_should_stay(self):
+        for total in range(2, 22):
+            if 17 <= total <= 21:
+                self.assertTrue(self.dealer_hand.dealer_should_stay(total))
+            else:
+                self.assertFalse(self.dealer_hand.dealer_should_stay(total))
+
+class TestMain(unittest.TestCase):
+
+    def setUp(self):
+        self.deck = blackjack.Deck()
+        self.dealer_hand = blackjack.DealerHand(blackjack.Deck())
+
+    def test_deal_to_all_players(self):
+        player_num = 7
+        player_cards = blackjack.deal_all_hands(player_num, self.deck)
+
+        for cards in player_cards:
+            for card in cards:
+                self.assertIsInstance(card, blackjack.Card)
+
+        self.assertEqual(len(player_cards), 7)
+        self.assertEqual(len(self.deck.deck), 38)
+
+    def test_display_hand_of_current_turn(self):
+        number_of_players = 7
+        all_player_cards = blackjack.deal_all_hands(number_of_players, self.deck)
+
+        for player_num in range(1, number_of_players + 1):
+            current_players_cards = blackjack.get_current_players_cards(
+                player_num, all_player_cards)
+
+            # Player 1 cards should correspond to cards at index 0, player 2 at index, 1, etc..
+            self.assertEqual(current_players_cards, all_player_cards[player_num - 1])
+
+    def test_add_new_card_to_hand(self):
+        old_hand = self.dealer_hand.deal_hand()
+        new_hand = blackjack.add_new_card_to_hand(old_hand, self.deck)
+        new_card = list(set(new_hand) - set(old_hand)).pop()
+
+        self.assertIsInstance(new_card, blackjack.Card)
+        self.assertEqual(old_hand, list(set(new_hand) & set(old_hand)))
+        self.assertEqual(len(new_hand) - len(old_hand), 1)
+
+
 
 
 if __name__ == '__main__':

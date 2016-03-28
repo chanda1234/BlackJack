@@ -8,6 +8,7 @@ hand is hard or soft (fairly common in most casinos).
 """
 
 import random
+import sys
 
 class Card(object):
     """
@@ -27,6 +28,14 @@ class Card(object):
         :return: (name, suit)
         """
         return self.name, self.suit
+
+    def full_name(self):
+        """
+        Return full name of the card (e.g., 'King of Diamonds'}
+        :param: card
+        :return: string
+        """
+        return '{0} of {1}'.format(self.display_card()[0], self.display_card()[1])
 
 class Deck(object):
     """
@@ -86,16 +95,20 @@ class Hand(object):
 
         values = [card.value for card in cards]
         total = sum(values)
-        # Returns high and low scores if hand is a soft hand
         for card in cards:
-            if card.name == 'Ace' and total + 10 < 21:
-                low_total = total
-                high_total = total + 10
 
-                return low_total, high_total
+            if card.name == 'Ace':
+                if total + 10 < 21:
+                    low_total = total
+                    high_total = total + 10
+                    return low_total, high_total
+
+                if total + 10 == 21:
+                    total += 10
 
         else:
             return total
+
 
     def is_blackjack(self, cards):
         """
@@ -138,7 +151,7 @@ class DealerHand(Hand):
         total = sum(values)
 
         for card in cards:
-            if card.name == 'Ace' and total + 10 < 21:
+            if card.name == 'Ace' and total + 10 <= 21:
                 total += 10
 
         return total
@@ -149,25 +162,183 @@ class DealerHand(Hand):
         :param: cards
         :return: bool
         """
-        if total < 17:
-            return True
-        else:
-            return False
 
-        ## Below are rules where the dealer must hit on a soft 17.  Might add
-        # an option for this setting later.
-        # if type(total) == tuple and total[1] <= 17:
-        #     return True
-        #
-        # # For a hard hand, the dealer hits if the score is < 17.
-        # elif type(total) == int and total < 17:
-        #     return True
-        #
-        # else:
-        #     return False
+        if type(total) == int:
+            if total < 17:
+                return True
+            else:
+                return False
+        else:
+            raise TypeError("Expected type(total) to be int, got type{0}".format(total))
+
+    def dealer_should_stay(self, total):
+        if type(total) == int:
+            if 17 <= total <= 21:
+                return True
+            else:
+                return False
+        else:
+            raise TypeError("Expected type(total) to be int, got type{0}".format(total))
+
+def deal_all_hands(number_of_players, deck):
+    """
+    Populate a list of all players' hands
+    :param: num_players (int), deck
+    """
+    hands = []
+    for num in range(1, number_of_players+1):
+        player_hand = Hand(deck)
+        hands.append(player_hand.deal_hand())
+
+    return hands
+
+def get_current_players_cards(player_number, player_hands):
+    for tup in enumerate(player_hands, 1):
+        if tup[0] == player_number:
+            current_players_hand = tup[1]
+
+            return current_players_hand
+
+def add_new_card_to_hand(cards, deck):
+    """
+    Return new hand with updated card list [(card1, name1), (card2, name2)...]
+    :param: current_hand (list of tuples as shown above), deck
+    :return: updated list of cards in hand
+    """
+    new_card = deck.deal_card()
+    new_hand = cards[:]
+    new_hand.append(new_card)
+
+    return new_hand
+
 
 def main():
-    pass
+    deck = Deck()
+    player_scores = {}
+    print "\n"
+    print "#####################################"
+    print "###########   BLACKJACK  ############"
+    print "#####################################"
+    print "\n"
+
+    while True:
+        user_input = raw_input("Enter number of players (maximum seven): ")
+        try:
+            number_of_players = int(user_input)
+            if not 0 < number_of_players < 8:
+                print "Number of players must be between 1 and 7\n"
+            else:
+                break
+        except ValueError:
+            print "Please enter a number.\n"
+
+    dealer_hand = DealerHand(deck)
+    dealer_cards = dealer_hand.deal_hand()
+    first_face_up_card = dealer_hand.display_visible_cards(dealer_cards)[0]
+
+    for player_num in range(1, number_of_players + 1):
+        hand = Hand(deck)
+        cards = hand.deal_hand()
+        displayed_cards = hand.display_cards(cards)
+        print "------------PLAYER {0} TURN------------\n".format(player_num)
+        print "DEALER SHOWING: {0} of {1}\n".format(first_face_up_card[0], first_face_up_card[1])
+        print "CURRENT HAND: ".format(player_num)
+        print "------------"
+
+        for card in displayed_cards:
+            print "{0} of {1}".format(card[0], card[1])
+        print "\n"
+
+        if hand.is_blackjack(cards):
+            print "** PLAYER {0} BLACKJACK! **".format(player_num)
+            player_scores[player_num] = 'blackjack'
+            continue
+        else:
+            print "CURRENT SCORE: {0}".format(hand.total_points(cards))
+
+        score = hand.total_points(cards)
+
+        while True:
+            hit_or_stay = raw_input("Hit? (y/n): ")
+            no_responses = ['N', 'n', 'No', 'no']
+            yes_responses = ['Y', 'y', 'Yes', 'yes']
+            print "\n"
+            if hit_or_stay not in yes_responses and hit_or_stay not in no_responses:
+                print "Please enter either Yes or No"
+
+            if hit_or_stay in yes_responses:
+                cards = add_new_card_to_hand(cards, deck)
+                print "** PLAYER {0} HITS **\n".format(player_num)
+                print "CURRENT HAND: ".format(player_num)
+                print "------------"
+                for card in cards:
+                    print "{0} of {1}".format(card.display_card()[0], card.display_card()[1])
+                print "\n"
+
+                score = hand.total_points(cards)
+                print "CURRENT SCORE: {0}".format(score)
+                # FIXME: If score type is a tuple here (aka a soft hand) you can bust under 21.
+                # This is now fixed but I should write a unit test for it
+                if type(score) == int:
+                    if score > 21:
+                        print "** PLAYER {0} BUSTS! **\n".format(player_num)
+                        if number_of_players > 1:
+                            break
+                        else:
+                            sys.exit()
+                    elif score == 21:
+                        print "** PLAYER {0} SCORES 21! **".format(player_num)
+                        player_scores[player_num] = score
+                        break
+                    else:
+                        pass
+
+                if type(score) == tuple:
+                    pass
+
+            if hit_or_stay in no_responses:
+                if type(score) == tuple:
+                    score = score[1]
+                player_scores[player_num] = score
+                print "** PLAYER {0} STAYS WITH {1} **\n".format(player_num, score)
+                break
+
+    dealer_score = dealer_hand.total_points(dealer_cards)
+    print "------------DEALER'S TURN------------\n"
+    print "CURRENT HAND: "
+    print "------------"
+    for card in dealer_cards:
+        print card.full_name()
+    print "CURRENT SCORE: {0}\n".format(dealer_score)
+
+    # Check for blackjack first
+    if dealer_hand.is_blackjack(dealer_cards):
+        print "** DEALER BLACKJACK **"
+        print "** DEALER WINS **"
+        sys.exit()
+
+    # If the dealer should not hit, dealer stays,
+    # and skips the 'hit' loop below.
+    if not dealer_hand.dealer_should_hit(dealer_score):
+        print "** DEALER STAYS WITH {0} **".format(dealer_score)
+
+    else:
+        while dealer_score < 17:
+            if dealer_hand.dealer_should_hit(dealer_score):
+                print "** DEALER HITS **\n"
+                dealer_cards = add_new_card_to_hand(dealer_cards, deck)
+                dealer_score = dealer_hand.total_points(dealer_cards)
+
+                for card in dealer_cards:
+                    print card.full_name()
+                print "CURRENT SCORE: {0}\n".format(dealer_score)
+
+        # Check if the dealer should stay, or if the dealer busted
+        if dealer_hand.dealer_should_stay(dealer_score):
+            print "** DEALER STAYS WITH {0} **\n".format(dealer_score)
+
+        elif dealer_score > 21:
+            print "** DEALER BUSTS **"
 
 if __name__ == '__main__':
     main()
