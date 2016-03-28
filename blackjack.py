@@ -193,10 +193,15 @@ def deal_all_hands(number_of_players, deck):
     return hands
 
 def get_current_players_cards(player_number, player_hands):
+    """
+    Return the hand from the list of player_hands which
+    corresponds to the player number.
+    :param: player_number, player_hands (list of Hand objects)
+    :return: Hand(obj)
+    """
     for tup in enumerate(player_hands, 1):
         if tup[0] == player_number:
             current_players_hand = tup[1]
-
             return current_players_hand
 
 def add_new_card_to_hand(cards, deck):
@@ -242,7 +247,7 @@ def main():
         displayed_cards = hand.display_cards(cards)
         print "------------PLAYER {0} TURN------------\n".format(player_num)
         print "DEALER SHOWING: {0} of {1}\n".format(first_face_up_card[0], first_face_up_card[1])
-        print "CURRENT HAND: ".format(player_num)
+        print "CURRENT HAND: "
         print "------------"
 
         for card in displayed_cards:
@@ -268,8 +273,12 @@ def main():
 
             if hit_or_stay in yes_responses:
                 cards = add_new_card_to_hand(cards, deck)
-                print "** PLAYER {0} HITS **\n".format(player_num)
-                print "CURRENT HAND: ".format(player_num)
+                player_hit_msg = "** PLAYER {0} HITS **\n".format(player_num)
+                player_21_msg = "** PLAYER {0} SCORES 21! **".format(player_num)
+                player_bust_msg = "** PLAYER {0} BUSTS! **\n".format(player_num)
+                current_hand_msg = "CURRENT HAND: ".format(player_num)
+                print player_hit_msg
+                print current_hand_msg
                 print "------------"
                 for card in cards:
                     print "{0} of {1}".format(card.display_card()[0], card.display_card()[1])
@@ -277,30 +286,31 @@ def main():
 
                 score = hand.total_points(cards)
                 print "CURRENT SCORE: {0}".format(score)
-                # FIXME: If score type is a tuple here (aka a soft hand) you can bust under 21.
-                # This is now fixed but I should write a unit test for it
+
                 if type(score) == int:
                     if score > 21:
-                        print "** PLAYER {0} BUSTS! **\n".format(player_num)
+                        print player_bust_msg
                         if number_of_players > 1:
                             break
                         else:
                             sys.exit()
                     elif score == 21:
-                        print "** PLAYER {0} SCORES 21! **".format(player_num)
+                        print player_21_msg
                         player_scores[player_num] = score
                         break
                     else:
                         pass
 
+                # If the score is a tuple, there is a soft ace in the hand.
                 if type(score) == tuple:
                     pass
 
             if hit_or_stay in no_responses:
+                player_stays_msg = "** PLAYER {0} STAYS WITH {1} **\n".format(player_num, score)
                 if type(score) == tuple:
                     score = score[1]
                 player_scores[player_num] = score
-                print "** PLAYER {0} STAYS WITH {1} **\n".format(player_num, score)
+                print player_stays_msg
                 break
 
     dealer_score = dealer_hand.total_points(dealer_cards)
@@ -317,8 +327,8 @@ def main():
         print "** DEALER WINS **"
         sys.exit()
 
-    # If the dealer should not hit, dealer stays,
-    # and skips the 'hit' loop below.
+    # If the dealer should not hit, (score > 17) dealer stays,
+    # and the 'hit' loop below will be skipped.
     if not dealer_hand.dealer_should_hit(dealer_score):
         print "** DEALER STAYS WITH {0} **".format(dealer_score)
 
