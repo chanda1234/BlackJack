@@ -35,6 +35,7 @@ class testDeckClass(unittest.TestCase):
 
     def test_get_52_card_deck(self):
         self.assertEqual(len(self.deck.deck), 51)
+    # Expected Output: 52, should FAIL
 
     @mock.patch('blackjack.random')
     def test_call_shuffle_on_deck(self, mock_random):
@@ -46,6 +47,14 @@ class testDeckClass(unittest.TestCase):
         card = self.deck.deal_card()
         self.assertIsInstance(card, blackjack.Card)
         self.assertEqual(len(self.deck.deck), 51)
+
+    def test_check_deal_card_modifies_count(self):
+        card = self.deck.deal_card()
+        card2 = self.deck.deal_card()
+        self.assertIsInstance(card, blackjack.Card)
+        self.assertIsInstance(card2, blackjack.Card)
+        self.assertEqual(len(self.deck.deck), 51)
+        # Expected Output: 50, should FAIL
 
 class testHandClass(unittest.TestCase):
 
