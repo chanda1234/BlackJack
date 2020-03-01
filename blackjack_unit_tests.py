@@ -34,7 +34,7 @@ class testDeckClass(unittest.TestCase):
         self.deck = blackjack.Deck()
 
     def test_get_52_card_deck(self):
-        self.assertEqual(len(self.deck.deck), 52)
+        self.assertEqual(len(self.deck.deck), 51)
 
     @mock.patch('blackjack.random')
     def test_call_shuffle_on_deck(self, mock_random):
