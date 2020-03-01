@@ -34,7 +34,7 @@ class testDeckClass(unittest.TestCase):
         self.deck = blackjack.Deck()
 
     def test_get_52_card_deck(self):
-        self.assertEqual(len(self.deck.deck), 51)
+        self.assertEqual(len(self.deck.deck), 52)
 
     @mock.patch('blackjack.random')
     def test_call_shuffle_on_deck(self, mock_random):
@@ -106,20 +106,120 @@ class TestMain(unittest.TestCase):
     def setUp(self):
         self.deck = blackjack.Deck()
         self.dealer_hand = blackjack.DealerHand(blackjack.Deck())
-
-    def test_deal_to_all_players(self):
-        player_num = 7
+    
+#Test dealing to varying number of players players
+    #test if it can deal to one player
+    def test_deal_to_one_players(self):
+        player_num = 1
         player_cards = blackjack.deal_all_hands(player_num, self.deck)
 
         for cards in player_cards:
             for card in cards:
                 self.assertIsInstance(card, blackjack.Card)
 
-        self.assertEqual(len(player_cards), 7)
+        self.assertEqual(len(player_cards), 1)
+        self.assertEqual(len(self.deck.deck), 50)
+    
+    #Test if it can deal to 5 players
+    def test_deal_to_five_players(self):
+        player_num = 5
+        player_cards = blackjack.deal_all_hands(player_num, self.deck)
+
+        for cards in player_cards:
+            for card in cards:
+                self.assertIsInstance(card, blackjack.Card)
+
+        self.assertEqual(len(player_cards), 5)
+        self.assertEqual(len(self.deck.deck), 42)
+
+
+    #Test if it will deal to no/0 players, This should fail
+    def test_deal_to_no_players(self):
+        player_num = 0
+        player_cards = blackjack.deal_all_hands(player_num, self.deck)
+
+        for cards in player_cards:
+            for card in cards:
+                self.assertIsInstance(card, blackjack.Card)
+
+        self.assertEqual(len(player_cards), 0)
+        self.assertEqual(len(self.deck.deck), 52)
+
+    #Test if it will deal to above the max number of players, this should fail
+    def test_deal_to_above_max_players(self):
+        player_num = 9
+        player_cards = blackjack.deal_all_hands(player_num, self.deck)
+
+        for cards in player_cards:
+            for card in cards:
+                self.assertIsInstance(card, blackjack.Card)
+
+        self.assertEqual(len(player_cards), 9)
+        self.assertEqual(len(self.deck.deck), 34)
+
+    #Test if it will deal to negative players, should fail
+    def test_deal_to_negative_players(self):
+        player_num = -1
+        player_cards = blackjack.deal_all_hands(player_num, self.deck)
+
+        for cards in player_cards:
+            for card in cards:
+                self.assertIsInstance(card, blackjack.Card)
+
+        self.assertEqual(len(player_cards), -1)
         self.assertEqual(len(self.deck.deck), 38)
 
-    def test_display_hand_of_current_turn(self):
-        number_of_players = 7
+    #Test1
+    def test_display_hand_of_current_turn_With_fifty_players(self):
+        number_of_players = 50
+        all_player_cards = blackjack.deal_all_hands(number_of_players, self.deck)
+
+        for player_num in range(1, number_of_players + 1):
+            current_players_cards = blackjack.get_current_players_cards(
+                player_num, all_player_cards)
+
+            # Player 1 cards should correspond to cards at index 0, player 2 at index, 1, etc..
+            self.assertEqual(current_players_cards, all_player_cards[player_num - 1])
+
+    #tets2
+    def test_display_hand_of_current_turn_With_negative_players(self):
+        number_of_players = -1
+        all_player_cards = blackjack.deal_all_hands(number_of_players, self.deck)
+
+        for player_num in range(1, number_of_players + 1):
+            current_players_cards = blackjack.get_current_players_cards(
+                player_num, all_player_cards)
+
+            # Player 1 cards should correspond to cards at index 0, player 2 at index, 1, etc..
+            self.assertEqual(current_players_cards, all_player_cards[player_num - 1])
+
+    #test3
+    def test_display_hand_of_current_turn_With_four_players(self):
+        number_of_players = 4
+        all_player_cards = blackjack.deal_all_hands(number_of_players, self.deck)
+
+        for player_num in range(1, number_of_players + 1):
+            current_players_cards = blackjack.get_current_players_cards(
+                player_num, all_player_cards)
+
+            # Player 1 cards should correspond to cards at index 0, player 2 at index, 1, etc..
+            self.assertEqual(current_players_cards, all_player_cards[player_num - 1])
+
+    #test4
+    def test_display_hand_of_current_turn_With_nine_players(self):
+        number_of_players = 9
+        all_player_cards = blackjack.deal_all_hands(number_of_players, self.deck)
+
+        for player_num in range(1, number_of_players + 1):
+            current_players_cards = blackjack.get_current_players_cards(
+                player_num, all_player_cards)
+
+            # Player 1 cards should correspond to cards at index 0, player 2 at index, 1, etc..
+            self.assertEqual(current_players_cards, all_player_cards[player_num - 1])
+    
+    #test5
+    def test_display_hand_of_current_turn_With_5_players(self):
+        number_of_players = 5
         all_player_cards = blackjack.deal_all_hands(number_of_players, self.deck)
 
         for player_num in range(1, number_of_players + 1):
