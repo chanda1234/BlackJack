@@ -22,11 +22,26 @@ class testCardClass(unittest.TestCase):
 
     def setUp(self):
         self.card = (blackjack.Card(12, 'Any suit'))
+    def test_return_name(self):
+        self.assertEqual(self.card.name, "King")
 
-    def test_return_card_features(self):
-        self.assertEqual(self.card.name, "Queen")
-        self.assertEqual(self.card.suit, "Any suit")
-        self.assertEqual(self.card.value, 10)
+    def test_return_suit(self):
+        self.assertEqual(self.card.suit, "Clubs")
+
+    def test_return_value(self):
+        self.assertEqual(self.card.value, "13")
+
+    def nsetUp(self):
+        self.card = (blackjack.Card(1, 'Nothing'))
+
+    def test_return_name2(self):
+        self.assertEqual(self.card.name, "Nothing")
+
+    def test_return_suit2(self):
+        self.assertEqual(self.card.suit, "Hearts")
+
+    def test_return_value2(self):
+        self.assertEqual(self.card.value, "2")
 
 class testDeckClass(unittest.TestCase):
 
@@ -66,7 +81,7 @@ class testHandClass(unittest.TestCase):
         self.example_soft_cards = [blackjack.Card(1, 'Hearts'),
                                    blackjack.Card(6, 'Diamonds')]
         self.example_blackjack_cards = [blackjack.Card(1, 'Spades'),
-                                        blackjack.Card(13, 'Hearts')]
+                                        blackjack.Card(10, 'Hearts')]
 
     def test_display_cards(self):
         displayed = self.hand.display_cards(self.example_hard_cards)
